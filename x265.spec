@@ -1,9 +1,10 @@
 %global commit 9f0324125f53
+%global x265lib 43
 
 Summary: H.265/HEVC encoder
 Name: x265
 Version: 1.5
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -20,10 +21,10 @@ highest performance on a wide variety of hardware platforms.
 
 This package contains the command line encoder.
 
-%package libs
+%package libs%{x265lib}
 Summary: H.265/HEVC encoder library
 
-%description libs
+%description libs%{x265lib}
 The primary objective of x265 is to become the best H.265/HEVC encoder
 available anywhere, offering the highest compression efficiency and the
 highest performance on a wide variety of hardware platforms.
@@ -32,7 +33,7 @@ This package contains the shared library.
 
 %package devel
 Summary: H.265/HEVC encoder library development files
-Requires: %{name}-libs%{?_isa} = %{version}-%{release}
+Requires: %{name}-libs%{x265lib} = %{version}-%{release}
 
 %description devel
 The primary objective of x265 is to become the best H.265/HEVC encoder
@@ -66,17 +67,17 @@ install -Dpm644 COPYING %{buildroot}%{_pkgdocdir}/COPYING
 LD_LIBRARY_PATH=$(pwd) test/TestBench
 %endif
 
-%post libs -p /sbin/ldconfig
+%post libs%{x265lib} -p /sbin/ldconfig
 
-%postun libs -p /sbin/ldconfig
+%postun libs%{x265lib} -p /sbin/ldconfig
 
 %files
 %{_bindir}/x265
 
-%files libs
+%files %{x265lib}
 %dir %{_pkgdocdir}
 %{_pkgdocdir}/COPYING
-%{_libdir}/libx265.so.43
+%{_libdir}/libx265.so.%{x265lib}
 
 %files devel
 %doc doc/*
@@ -86,6 +87,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Mon Apr 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.5-2
+- Changed build so that libx265.so will be a protocol version specific rpm so that an update of x265 will not break old dependencies
+
 * Sat Feb 14 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.5-1
 - Initial build for ClearOS
 - Spec file based on RPMFusion spec file 1.2-6 for Fedora 21
