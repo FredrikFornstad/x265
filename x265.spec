@@ -1,10 +1,10 @@
-%global commit 9f0324125f53
-%global x265lib 43
+%global commit cbeb7d8a4880
+%global x265lib 51
 
 Summary: H.265/HEVC encoder
 Name: x265
-Version: 1.5
-Release: 2%{?dist}
+Version: 1.6
+Release: 1%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -12,7 +12,7 @@ Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # everything else - GPLv2+
 License: GPLv2+ and BSD
 BuildRequires: cmake
-BuildRequires: yasm
+BuildRequires: yasm >= 1.2.0
 
 %description
 The primary objective of x265 is to become the best H.265/HEVC encoder
@@ -74,7 +74,7 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %files
 %{_bindir}/x265
 
-%files %{x265lib}
+%files libs%{x265lib}
 %dir %{_pkgdocdir}
 %{_pkgdocdir}/COPYING
 %{_libdir}/libx265.so.%{x265lib}
@@ -87,6 +87,10 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Mon Apr 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-1
+- New upstream release
+- Specified required yasm version for build
+
 * Mon Apr 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.5-2
 - Changed build so that libx265.so will be a protocol version specific rpm so that an update of x265 will not break old dependencies
 
