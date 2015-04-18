@@ -4,7 +4,7 @@
 Summary: H.265/HEVC encoder
 Name: x265
 Version: 1.6
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -13,6 +13,8 @@ Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 License: GPLv2+ and BSD
 BuildRequires: cmake
 BuildRequires: yasm >= 1.2.0
+
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 %description
 The primary objective of x265 is to become the best H.265/HEVC encoder
@@ -87,6 +89,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sat Apr 18 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-2
+- Defined pkgconfig to enable builds when pkgconfig has not been declared (ClearOS 7 Beta1) without errors
+
 * Mon Apr 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-1
 - New upstream release
 - Specified required yasm version for build
