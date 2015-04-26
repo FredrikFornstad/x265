@@ -1,10 +1,10 @@
 %global commit cbeb7d8a4880
-%global x265lib 51
+%lib_package x265 51
 
 Summary: H.265/HEVC encoder
 Name: x265
 Version: 1.6
-Release: 2%{?dist}
+Release: 3%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -13,36 +13,12 @@ Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 License: GPLv2+ and BSD
 BuildRequires: cmake
 BuildRequires: yasm >= 1.2.0
-
-%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+%lib_dependencies
 
 %description
 The primary objective of x265 is to become the best H.265/HEVC encoder
 available anywhere, offering the highest compression efficiency and the
 highest performance on a wide variety of hardware platforms.
-
-This package contains the command line encoder.
-
-%package libs%{x265lib}
-Summary: H.265/HEVC encoder library
-
-%description libs%{x265lib}
-The primary objective of x265 is to become the best H.265/HEVC encoder
-available anywhere, offering the highest compression efficiency and the
-highest performance on a wide variety of hardware platforms.
-
-This package contains the shared library.
-
-%package devel
-Summary: H.265/HEVC encoder library development files
-Requires: %{name}-libs%{x265lib} = %{version}-%{release}
-
-%description devel
-The primary objective of x265 is to become the best H.265/HEVC encoder
-available anywhere, offering the highest compression efficiency and the
-highest performance on a wide variety of hardware platforms.
-
-This package contains the shared library development files.
 
 %prep
 %setup -q -n multicoreware-%{name}-%{commit}
@@ -69,26 +45,16 @@ install -Dpm644 COPYING %{buildroot}%{_pkgdocdir}/COPYING
 LD_LIBRARY_PATH=$(pwd) test/TestBench
 %endif
 
-%post libs%{x265lib} -p /sbin/ldconfig
-
-%postun libs%{x265lib} -p /sbin/ldconfig
-
 %files
 %{_bindir}/x265
-
-%files libs%{x265lib}
-%dir %{_pkgdocdir}
-%{_pkgdocdir}/COPYING
-%{_libdir}/libx265.so.%{x265lib}
-
-%files devel
 %doc doc/*
-%{_includedir}/x265.h
-%{_includedir}/x265_config.h
-%{_libdir}/libx265.so
-%{_libdir}/pkgconfig/x265.pc
+%{_pkgdocdir}/COPYING
+
 
 %changelog
+* Sun Apr 26 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-3
+- Adjusted spec file to build rpm in ATrpms style
+
 * Sat Apr 18 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-2
 - Defined pkgconfig to enable builds when pkgconfig has not been declared (ClearOS 7 Beta1) without errors
 
