@@ -4,14 +4,14 @@
 Summary: H.265/HEVC encoder
 Name: x265
 Version: 1.6
-Release: 3%{?dist}
+Release: 4%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
 # everything else - GPLv2+
 License: GPLv2+ and BSD
-BuildRequires: cmake
+BuildRequires: cmake, atrpms-rpm-config
 BuildRequires: yasm >= 1.2.0
 %lib_dependencies
 
@@ -52,6 +52,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 
 
 %changelog
+* Wed May 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-4
+- Added buildrequirement atrpms-rpm-config
+
 * Sun Apr 26 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-3
 - Adjusted spec file to build rpm in ATrpms style
 
