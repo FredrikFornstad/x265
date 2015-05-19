@@ -1,10 +1,10 @@
-%global commit cbeb7d8a4880
-%lib_package x265 51
+%global commit 8425278def1e
+%lib_package x265 59
 
 Summary: H.265/HEVC encoder
 Name: x265
-Version: 1.6
-Release: 4%{?dist}
+Version: 1.7
+Release: 1%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -52,6 +52,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 
 
 %changelog
+* Tue May 19 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.7-1
+- New upstream release
+
 * Wed May 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-4
 - Added buildrequirement atrpms-rpm-config
 
