@@ -1,24 +1,52 @@
 %global commit 8425278def1e
-%lib_package x265 59
+%global x265lib 59
 
 Summary: H.265/HEVC encoder
 Name: x265
 Version: 1.7
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
 # everything else - GPLv2+
 License: GPLv2+ and BSD
-BuildRequires: cmake, atrpms-rpm-config
+Group: System Environment/Libraries
+BuildRequires: cmake
 BuildRequires: yasm >= 1.2.0
-%lib_dependencies
+
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 %description
 The primary objective of x265 is to become the best H.265/HEVC encoder
 available anywhere, offering the highest compression efficiency and the
 highest performance on a wide variety of hardware platforms.
+
+This package contains the command line encoder.
+
+%package libs_%{x265lib}
+Summary: H.265/HEVC encoder library
+Group: Development/Libraries
+Obsoletes: libx265_%{x265lib}
+
+%description libs_%{x265lib}
+The primary objective of x265 is to become the best H.265/HEVC encoder
+available anywhere, offering the highest compression efficiency and the
+highest performance on a wide variety of hardware platforms.
+
+This package contains the shared library.
+
+%package devel
+Summary: H.265/HEVC encoder library development files
+Group: Development/Libraries
+Requires: %{name}-libs_%{x265lib} = %{version}-%{release}
+
+%description devel
+The primary objective of x265 is to become the best H.265/HEVC encoder
+available anywhere, offering the highest compression efficiency and the
+highest performance on a wide variety of hardware platforms.
+
+This package contains the shared library development files.
 
 %prep
 %setup -q -n multicoreware-%{name}-%{commit}
@@ -45,13 +73,29 @@ install -Dpm644 COPYING %{buildroot}%{_pkgdocdir}/COPYING
 LD_LIBRARY_PATH=$(pwd) test/TestBench
 %endif
 
+%post libs_%{x265lib} -p /sbin/ldconfig
+
+%postun libs_%{x265lib} -p /sbin/ldconfig
+
 %files
 %{_bindir}/x265
-%doc doc/*
-%{_pkgdocdir}/COPYING
 
+%files libs_%{x265lib}
+%dir %{_pkgdocdir}
+%{_pkgdocdir}/COPYING
+%{_libdir}/libx265.so.%{x265lib}
+
+%files devel
+%doc doc/*
+%{_includedir}/x265.h
+%{_includedir}/x265_config.h
+%{_libdir}/libx265.so
+%{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sat Jun 13 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.7-2
+- Removed ATrpms style and dependencies to comply with ClearOS policy
+
 * Tue May 19 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.7-1
 - New upstream release
 
