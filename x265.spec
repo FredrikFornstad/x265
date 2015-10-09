@@ -1,10 +1,10 @@
-%global commit 8425278def1e
-%global x265lib 59
+%global commit e27327f5da35
+%global x265lib 68
 
 Summary: H.265/HEVC encoder
 Name: x265
-Version: 1.7
-Release: 2%{?dist}
+Version: 1.8
+Release: 1%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -93,6 +93,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Fri Oct 9 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.8-1
+- New upstream release
+
 * Sat Jun 13 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.7-2
 - Removed ATrpms style and dependencies to comply with ClearOS policy
 
