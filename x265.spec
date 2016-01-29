@@ -1,9 +1,9 @@
-%global commit e27327f5da35
-%global x265lib 68
+%global commit 1d3b6e448e01
+%global x265lib 79
 
 Summary: H.265/HEVC encoder
 Name: x265
-Version: 1.8
+Version: 1.9
 Release: 1%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
@@ -14,6 +14,7 @@ License: GPLv2+ and BSD
 Group: System Environment/Libraries
 BuildRequires: cmake
 BuildRequires: yasm >= 1.2.0
+Requires: x265-libs = %{version}
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
@@ -24,12 +25,12 @@ highest performance on a wide variety of hardware platforms.
 
 This package contains the command line encoder.
 
-%package libs_%{x265lib}
+%package libs
 Summary: H.265/HEVC encoder library
 Group: Development/Libraries
-Obsoletes: libx265_%{x265lib}
+Obsoletes: libx265_%{x265lib}, x265-libs_68, x265-libs_59
 
-%description libs_%{x265lib}
+%description libs
 The primary objective of x265 is to become the best H.265/HEVC encoder
 available anywhere, offering the highest compression efficiency and the
 highest performance on a wide variety of hardware platforms.
@@ -39,7 +40,7 @@ This package contains the shared library.
 %package devel
 Summary: H.265/HEVC encoder library development files
 Group: Development/Libraries
-Requires: %{name}-libs_%{x265lib} = %{version}-%{release}
+Requires: %{name}-libs = %{version}-%{release}
 
 %description devel
 The primary objective of x265 is to become the best H.265/HEVC encoder
@@ -73,17 +74,21 @@ install -Dpm644 COPYING %{buildroot}%{_pkgdocdir}/COPYING
 LD_LIBRARY_PATH=$(pwd) test/TestBench
 %endif
 
-%post libs_%{x265lib} -p /sbin/ldconfig
+%post libs -p /sbin/ldconfig
 
-%postun libs_%{x265lib} -p /sbin/ldconfig
+%postun libs -p /sbin/ldconfig
+
+%post devel -p /sbin/ldconfig
+
+%postun devel -p /sbin/ldconfig
 
 %files
 %{_bindir}/x265
 
-%files libs_%{x265lib}
+%files libs
 %dir %{_pkgdocdir}
 %{_pkgdocdir}/COPYING
-%{_libdir}/libx265.so.%{x265lib}
+%{_libdir}/libx265.so.*
 
 %files devel
 %doc doc/*
@@ -93,6 +98,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Fri Jan 29 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.9-1
+- New upstream release and new lib naming after discussion with ClearOS team
+
 * Fri Oct 9 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.8-1
 - New upstream release
 
