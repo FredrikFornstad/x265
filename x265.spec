@@ -4,7 +4,7 @@
 Summary: H.265/HEVC encoder
 Name: x265
 Version: 1.9
-Release: 1%{?dist}
+Release: 2%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -51,22 +51,45 @@ This package contains the shared library development files.
 
 %prep
 %setup -q -n multicoreware-%{name}-%{commit}
-# tests are crashing on x86 if linked against shared libx265
-f=doc/uncrustify/drag-uncrustify.bat
-tr -d '\r' < ${f} > ${f}.unix && \
-touch -r ${f} ${f}.unix && \
-mv ${f}.unix ${f}
 
 %build
-%cmake -G "Unix Makefiles" \
- -DCMAKE_SKIP_RPATH:BOOL=YES \
- -DENABLE_TESTS:BOOL=ON \
- source
+mkdir -p 10bit 12bit
+
+cd 12bit
+%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON \
+ -DENABLE_TESTS:BOOL=ON -DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DMAIN12=ON ../source
 make %{?_smp_mflags}
+
+cd ../10bit
+%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON \
+ -DENABLE_TESTS:BOOL=ON -DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF ../source
+make %{?_smp_mflags}
+
+cd ..
+ln -sf 10bit/libx265.a libx265_main10.a
+ln -sf 12bit/libx265.a libx265_main12.a
+%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON -DENABLE_SHARED=ON \
+ -DENABLE_TESTS:BOOL=ON -DEXTRA_LIB="x265_main10.a;x265_main12.a" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON source
+make %{?_smp_mflags}
+
+# rename the 8bit library, then combine all three into libx265.a
+mv libx265.a libx265_main.a
+
+# On Linux, we use GNU ar to combine the static libraries together
+ar -M <<EOF
+CREATE libx265.a
+ADDLIB libx265_main.a
+ADDLIB libx265_main10.a
+ADDLIB libx265_main12.a
+SAVE
+END
+EOF
+
 
 %install
 make DESTDIR=%{buildroot} install
-rm %{buildroot}%{_libdir}/libx265.a
+# We do not want the static lib in ClearOS
+rm %{buildroot}%{_libdir}/libx265*.a
 install -Dpm644 COPYING %{buildroot}%{_pkgdocdir}/COPYING
 
 %ifnarch %{arm}
@@ -98,6 +121,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Tue Feb 2 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.9-2
+- Building x265 as multilib with 8bit (default), 10bit and 12bit support
+
 * Fri Jan 29 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.9-1
 - New upstream release and new lib naming after discussion with ClearOS team
 
