@@ -53,7 +53,7 @@ This package contains the shared library development files.
 %setup -q -n multicoreware-%{name}-%{commit}
 
 %build
-%ifnarch i386
+%ifnarch i686
 mkdir -p 10bit 12bit
 
 cd 12bit
