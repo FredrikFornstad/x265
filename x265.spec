@@ -53,6 +53,7 @@ This package contains the shared library development files.
 %setup -q -n multicoreware-%{name}-%{commit}
 
 %build
+%ifnarch i386
 mkdir -p 10bit 12bit
 
 cd 12bit
@@ -85,6 +86,13 @@ SAVE
 END
 EOF
 
+%else 
+
+%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON -DENABLE_SHARED=ON \
+ -DENABLE_TESTS:BOOL=ON source
+make %{?_smp_mflags}
+
+%endif
 
 %install
 make DESTDIR=%{buildroot} install
