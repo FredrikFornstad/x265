@@ -1,10 +1,10 @@
-%global commit 1d3b6e448e01
-%global x265lib 79
+%global commit 960c9991d0dc
+%global x265lib 87
 
 Summary: H.265/HEVC encoder
 Name: x265
-Version: 1.9
-Release: 2%{?dist}
+Version: 2.0
+Release: 1%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
 # source/Lib/TLibCommon - BSD
@@ -129,6 +129,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sat Aug 20 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.0-1
+- New upstream release
+
 * Tue Feb 2 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.9-2
 - Building x265 as multilib with 8bit (default), 10bit and 12bit support
 
