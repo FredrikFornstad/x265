@@ -1,9 +1,9 @@
-%global commit 981e3bfef16a
-%global x265lib 95
+%global commit be14a7e9755e
+%global x265lib 102
 
 Summary: H.265/HEVC encoder
 Name: x265
-Version: 2.1
+Version: 2.2
 Release: 1%{?dist}
 URL: http://x265.org/
 Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
@@ -129,6 +129,9 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Tue Jan 3 2017 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.2-1
+- New upstream release
+
 * Wed Sep 28 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.1-1
 - New upstream release
 
