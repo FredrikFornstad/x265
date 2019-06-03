@@ -1,34 +1,45 @@
-%global commit 0e9ea76945c8
-%global x265lib 146
+%global     _so_version 169
 
-Summary: H.265/HEVC encoder
-Name: x265
-Version: 2.6
-Release: 1%{?dist}
-URL: http://x265.org/
-Source0: https://bitbucket.org/multicoreware/x265/get/%{version}.tar.bz2
+Summary:    H.265/HEVC encoder
+Name:       x265
+Version:    3.0
+Release:    2%{?dist}
+URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
 # everything else - GPLv2+
-License: GPLv2+ and BSD
-Group: System Environment/Libraries
-BuildRequires: cmake
-BuildRequires: yasm >= 1.2.0
-Requires: x265-libs = %{version}
+License:    GPLv2+ and BSD
 
-%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+Source0:    https://bitbucket.org/multicoreware/%{name}/downloads/%{name}_%{version}.tar.gz
+
+# fix building as PIC
+Patch0:     x265-pic.patch
+Patch1:     x265-high-bit-depth-soname.patch
+Patch2:     x265-detect_cpu_armhfp.patch
+Patch3:     x265-arm-cflags.patch
+Patch4:     x265-pkgconfig_path_fix.patch
+Patch5:     x265-2.8-asm-primitives.patch
+
+BuildRequires:  gcc-c++
+BuildRequires:  cmake3
+%{?el7:BuildRequires: epel-rpm-macros}
+BuildRequires:  nasm
+BuildRequires:  ninja-build
+
+%ifnarch armv7hl armv7hnl s390 s390x
+BuildRequires:  numactl-devel
+%endif
 
 %description
 The primary objective of x265 is to become the best H.265/HEVC encoder
-available anywhere, offering the highest compression efficiency and the
-highest performance on a wide variety of hardware platforms.
+available anywhere, offering the highest compression efficiency and the highest
+performance on a wide variety of hardware platforms.
 
 This package contains the command line encoder.
 
 %package libs
-Summary: H.265/HEVC encoder library
-Group: Development/Libraries
-Obsoletes: libx265_%{x265lib}, x265-libs_68, x265-libs_59
+Summary:    H.265/HEVC encoder library
+Obsoletes: x265-libs_68, x265-libs_59
 
 %description libs
 The primary objective of x265 is to become the best H.265/HEVC encoder
@@ -38,88 +49,89 @@ highest performance on a wide variety of hardware platforms.
 This package contains the shared library.
 
 %package devel
-Summary: H.265/HEVC encoder library development files
-Group: Development/Libraries
-Requires: %{name}-libs = %{version}-%{release}
+Summary:    H.265/HEVC encoder library development files
+Requires:   %{name}-libs%{?_isa} = %{version}-%{release}
 
 %description devel
 The primary objective of x265 is to become the best H.265/HEVC encoder
-available anywhere, offering the highest compression efficiency and the
-highest performance on a wide variety of hardware platforms.
+available anywhere, offering the highest compression efficiency and the highest
+performance on a wide variety of hardware platforms.
 
 This package contains the shared library development files.
 
 %prep
-%setup -q -n multicoreware-%{name}-%{commit}
+%autosetup -p1 -n %{name}_%{version}
 
 %build
-%ifnarch i686
-mkdir -p 10bit 12bit
+# High depth libraries (from source/h265.h):
+#   If the requested bitDepth is not supported by the linked libx265,
+#   it will attempt to dynamically bind x265_api_get() from a shared
+#   library with an appropriate name:
+#     8bit:  libx265_main.so
+#     10bit: libx265_main10.so
 
-cd 12bit
-%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON \
- -DENABLE_TESTS:BOOL=ON -DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF -DMAIN12=ON ../source
-make %{?_smp_mflags}
+build() {
+%cmake3 -Wno-dev -G "Ninja" \
+    -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
+    -DCMAKE_SKIP_RPATH:BOOL=YES \
+    -DENABLE_PIC:BOOL=ON \
+    -DENABLE_TESTS:BOOL=ON \
+    $* \
+    ../source
+%ninja_build
+}
 
-cd ../10bit
-%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON \
- -DENABLE_TESTS:BOOL=ON -DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF -DENABLE_SHARED=OFF -DENABLE_CLI=OFF ../source
-make %{?_smp_mflags}
+# High depth 10/12 bit libraries are supported only on 64 bit. They require
+# disabled AltiVec instructions for building on ppc64/ppc64le.
+%ifarch x86_64 aarch64 ppc64 ppc64le
+mkdir 10bit; pushd 10bit
+    build -DENABLE_CLI=OFF -DENABLE_ALTIVEC=OFF -DHIGH_BIT_DEPTH=ON
+popd
 
-cd ..
-ln -sf 10bit/libx265.a libx265_main10.a
-ln -sf 12bit/libx265.a libx265_main12.a
-%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON -DENABLE_SHARED=ON \
- -DENABLE_TESTS:BOOL=ON -DEXTRA_LIB="x265_main10.a;x265_main12.a" -DEXTRA_LINK_FLAGS=-L. -DLINKED_10BIT=ON -DLINKED_12BIT=ON source
-make %{?_smp_mflags}
-
-# rename the 8bit library, then combine all three into libx265.a
-mv libx265.a libx265_main.a
-
-# On Linux, we use GNU ar to combine the static libraries together
-ar -M <<EOF
-CREATE libx265.a
-ADDLIB libx265_main.a
-ADDLIB libx265_main10.a
-ADDLIB libx265_main12.a
-SAVE
-END
-EOF
-
-%else 
-
-%cmake -G "Unix Makefiles" -DCMAKE_SKIP_RPATH:BOOL=YES -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON -DENABLE_PIC:BOOL=ON -DENABLE_SHARED=ON \
- -DENABLE_TESTS:BOOL=ON source
-make %{?_smp_mflags}
-
+mkdir 12bit; pushd 12bit
+    build -DENABLE_CLI=OFF -DENABLE_ALTIVEC=OFF -DHIGH_BIT_DEPTH=ON -DMAIN12=ON
+popd
 %endif
+
+# 8 bit base library + encoder
+mkdir 8bit; pushd 8bit
+    build
+popd
 
 %install
-make DESTDIR=%{buildroot} install
-# We do not want the static lib in ClearOS
-rm %{buildroot}%{_libdir}/libx265*.a
-install -Dpm644 COPYING %{buildroot}%{_pkgdocdir}/COPYING
+for i in 8 10 12; do
+    if [ -d ${i}bit ]; then
+        pushd ${i}bit
+            %ninja_install
+            # Remove unversioned library, should not be linked to
+            rm -f %{buildroot}%{_libdir}/libx265_main${i}.so
+        popd
+    fi
+done
 
-%ifnarch %{arm}
+find %{buildroot} -name "*.a" -delete
+
 %check
-LD_LIBRARY_PATH=$(pwd) test/TestBench
-%endif
+for i in 8 10 12; do
+    if [ -d ${i}bit ]; then
+        pushd ${i}bit
+            test/TestBench || :
+        popd
+    fi
+done
 
-%post libs -p /sbin/ldconfig
-
-%postun libs -p /sbin/ldconfig
-
-%post devel -p /sbin/ldconfig
-
-%postun devel -p /sbin/ldconfig
+%ldconfig_scriptlets libs
 
 %files
 %{_bindir}/x265
 
 %files libs
-%dir %{_pkgdocdir}
-%{_pkgdocdir}/COPYING
-%{_libdir}/libx265.so.*
+%license COPYING
+%{_libdir}/libx265.so.%{_so_version}
+%ifarch x86_64 aarch64 ppc64 ppc64le
+%{_libdir}/libx265_main10.so.%{_so_version}
+%{_libdir}/libx265_main12.so.%{_so_version}
+%endif
 
 %files devel
 %doc doc/*
@@ -129,58 +141,119 @@ LD_LIBRARY_PATH=$(pwd) test/TestBench
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
-* Sat Dec 2 2017 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.6-1
-- New upstream release
+* Mon Jun 3 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.0-2
+- Obsoletes any early stage x265 builds in ClearOS
 
-* Sun Aug 6 2017 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.5-1
-- New upstream release
+* Thu Feb 28 2019 Leigh Scott <leigh123linux@googlemail.com> - 3.0-1
+- Update to 3.0
 
-* Sun Apr 23 2017 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.4-1
-- New upstream release
+* Sun Dec 30 2018 Leigh Scott <leigh123linux@googlemail.com> - 2.9-3
+- Rebuild against newer nasm on el7 (rfbz #5128)
 
-* Wed Feb 15 2017 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.3-1
-- New upstream release
+* Wed Nov 21 2018 Antonio Trande <sagitter@fedoraproject.org> - 2.9-2
+- Rebuild for ffmpeg-3.* on el7
 
-* Tue Jan 3 2017 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.2-1
-- New upstream release
+* Sun Nov 18 2018 Leigh Scott <leigh123linux@googlemail.com> - 2.9-1
+- Update to 2.9
 
-* Wed Sep 28 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.1-1
-- New upstream release
+* Thu Oct 04 2018 Sérgio Basto <sergio@serjux.com> - 2.8-1
+- Update to 2.8 more 2 patches to fix builds on non-x86 and arm
+  https://bitbucket.org/multicoreware/x265/issues/404/28-fails-to-build-on-ppc64le-gnu-linux
+  https://bitbucket.org/multicoreware/x265/issues/406/arm-assembly-fail-to-compile-on-18
 
-* Sat Aug 20 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 2.0-1
-- New upstream release
+* Sun Aug 19 2018 Leigh Scott <leigh123linux@googlemail.com> - 2.7-5
+- Rebuilt for Fedora 29 Mass Rebuild binutils issue
 
-* Tue Feb 2 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.9-2
-- Building x265 as multilib with 8bit (default), 10bit and 12bit support
+* Fri Jul 27 2018 RPM Fusion Release Engineering <leigh123linux@gmail.com> - 2.7-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 
-* Fri Jan 29 2016 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.9-1
-- New upstream release and new lib naming after discussion with ClearOS team
+* Sun Apr 08 2018 Leigh Scott <leigh123linux@googlemail.com> - 2.7-3
+- Fix pkgconfig file (rfbz #4853)
 
-* Fri Oct 9 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.8-1
-- New upstream release
+* Tue Feb 27 2018 Nicolas Chauvet <kwizart@gmail.com> - 2.7-2
+- Fix CFLAGS on ARM
 
-* Sat Jun 13 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.7-2
-- Removed ATrpms style and dependencies to comply with ClearOS policy
+* Tue Feb 27 2018 Leigh Scott <leigh123linux@googlemail.com> - 2.7-1
+- update to 2.7
+- Drop shared test patch as it causes nasm build to fail
+- Fix scriptlets
+- Use ninja to build
 
-* Tue May 19 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.7-1
-- New upstream release
+* Sat Dec 30 2017 Sérgio Basto <sergio@serjux.com> - 2.6-1
+- Update x265 to 2.6
 
-* Wed May 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-4
-- Added buildrequirement atrpms-rpm-config
+* Mon Oct 16 2017 Leigh Scott <leigh123linux@googlemail.com> - 2.5-1
+- update to 2.5
 
-* Sun Apr 26 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-3
-- Adjusted spec file to build rpm in ATrpms style
+* Thu Aug 31 2017 RPM Fusion Release Engineering <kwizart@rpmfusion.org> - 2.4-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
 
-* Sat Apr 18 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-2
-- Defined pkgconfig to enable builds when pkgconfig has not been declared (ClearOS 7 Beta1) without errors
+* Sat Apr 29 2017 Leigh Scott <leigh123linux@googlemail.com> - 2.4-1
+- update to 2.4
 
-* Mon Apr 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.6-1
-- New upstream release
-- Specified required yasm version for build
+* Mon Apr 10 2017 Simone Caronni <negativo17@gmail.com> - 2.2-3
+- Use source from multicoreware website.
+- Clean up SPEC file a bit (formatting, 80 char wide descriptions).
+- Enable shared 10/12 bit libraries on 64 bit architectures.
 
-* Mon Apr 6 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.5-2
-- Changed build so that libx265.so will be a protocol version specific rpm so that an update of x265 will not break old dependencies
+* Mon Mar 20 2017 RPM Fusion Release Engineering <kwizart@rpmfusion.org> - 2.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 
-* Sat Feb 14 2015 Fredrik Fornstad <fredrik.fornstad@gmail.com> 1.5-1
-- Initial build for ClearOS
-- Spec file based on RPMFusion spec file 1.2-6 for Fedora 21
+* Tue Jan 03 2017 Dominik Mierzejewski <rpm@greysector.net> - 2.2-1
+- update to 2.2
+- spell out SO version in file list
+- fix typo in patch
+
+* Mon Nov 07 2016 Sérgio Basto <sergio@serjux.com> - 2.1-1
+- Update to 2.1
+
+* Thu Aug 18 2016 Sérgio Basto <sergio@serjux.com> - 1.9-3
+- Clean spec, Vascom patches series, rfbz #4199, add license tag
+
+* Tue Jul 19 2016 Dominik Mierzejewski <rpm@greysector.net> - 1.9-2
+- use https for source URL
+- enable NUMA support
+- make sure Fedora compiler flags are used on ARM
+
+* Fri Apr 08 2016 Adrian Reber <adrian@lisas.de> - 1.9-1
+- Update to 1.9
+
+* Sun Oct 25 2015 Dominik Mierzejewski <rpm@greysector.net> 1.8-2
+- fix building as PIC
+- update SO version in file list
+
+* Sat Oct 24 2015 Nicolas Chauvet <kwizart@gmail.com> - 1.8-1
+- Update to 1.8
+- Avoid tests for now
+
+* Wed Apr 15 2015 Dominik Mierzejewski <rpm@greysector.net> 1.6-1
+- update to 1.6 (ABI bump, rfbz#3593)
+- release tarballs are now hosted on videolan.org
+- drop obsolete patches
+
+* Thu Dec 18 2014 Dominik Mierzejewski <rpm@greysector.net> 1.2-6
+- fix build on armv7l arch (partially fix rfbz#3361, patch by Nicolas Chauvet)
+- don't run tests on ARM for now (rfbz#3361)
+
+* Sun Aug 17 2014 Dominik Mierzejewski <rpm@greysector.net> 1.2-5
+- don't include contributor agreement in doc
+- make sure /usr/share/doc/x265 is owned
+- add a comment noting which files are BSD-licenced
+
+* Fri Aug 08 2014 Dominik Mierzejewski <rpm@greysector.net> 1.2-4
+- don't create bogus soname (patch by Xavier)
+
+* Thu Jul 17 2014 Dominik Mierzejewski <rpm@greysector.net> 1.2-3
+- fix tr call to remove DOS EOL
+- build the library with -fPIC on arm and i686, too
+
+* Sun Jul 13 2014 Dominik Mierzejewski <rpm@greysector.net> 1.2-2
+- use version in source URL
+- update License tag
+- fix EOL in drag-uncrustify.bat
+- don't link test binaries with shared binary on x86 (segfault)
+
+* Thu Jul 10 2014 Dominik Mierzejewski <rpm@greysector.net> 1.2-1
+- initial build
+- fix pkgconfig file install location
+- link test binaries with shared library
