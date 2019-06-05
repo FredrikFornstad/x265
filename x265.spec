@@ -1,8 +1,8 @@
-%global     _so_version 169
+%global     _so_version 146
 
 Summary:    H.265/HEVC encoder
 Name:       x265
-Version:    3.0
+Version:    2.6
 Release:    2%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
@@ -23,7 +23,7 @@ Patch5:     x265-2.8-asm-primitives.patch
 BuildRequires:  gcc-c++
 BuildRequires:  cmake3
 %{?el7:BuildRequires: epel-rpm-macros}
-BuildRequires:  nasm
+BuildRequires:  yasm
 BuildRequires:  ninja-build
 
 %ifnarch armv7hl armv7hnl s390 s390x
@@ -60,7 +60,7 @@ performance on a wide variety of hardware platforms.
 This package contains the shared library development files.
 
 %prep
-%autosetup -p1 -n %{name}_%{version}
+%autosetup -p1 -n %{name}_v%{version}
 
 %build
 # High depth libraries (from source/h265.h):
@@ -141,8 +141,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
-* Mon Jun 3 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.0-2
-- Obsoletes any early stage x265 builds in ClearOS
+* Wed Jun 5 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 2.6-2
+- Use earlier version from upstream so that we can build with yasm
+- Obsoletes earlier x265 builds in ClearOS
 
 * Thu Feb 28 2019 Leigh Scott <leigh123linux@googlemail.com> - 3.0-1
 - Update to 3.0
