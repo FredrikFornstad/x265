@@ -3,7 +3,7 @@
 Summary:    H.265/HEVC encoder
 Name:       x265
 Version:    2.6
-Release:    2%{?dist}
+Release:    3%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -18,7 +18,6 @@ Patch1:     x265-high-bit-depth-soname.patch
 Patch2:     x265-detect_cpu_armhfp.patch
 Patch3:     x265-arm-cflags.patch
 Patch4:     x265-pkgconfig_path_fix.patch
-Patch5:     x265-2.8-asm-primitives.patch
 
 BuildRequires:  gcc-c++
 BuildRequires:  cmake3
@@ -141,6 +140,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Wed Jun 5 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 2.6-3
+- Removed a 2.8 asm patch that failed on armv7
+
 * Wed Jun 5 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 2.6-2
 - Use earlier version from upstream so that we can build with yasm
 - Obsoletes earlier x265 builds in ClearOS
