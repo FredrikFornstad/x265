@@ -1,0 +1,17 @@
+--- org/source/CMakeLists.txt	2019-01-23 10:47:18.000000000 +0100
++++ mod/source/CMakeLists.txt	2019-06-06 12:03:38.854973521 +0200
+@@ -336,8 +336,12 @@
+     option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" ON)
+ elseif(NASM_FOUND AND X86)
+     if (NASM_VERSION_STRING VERSION_LESS "2.13.0")
+-        message(STATUS "Nasm version ${NASM_VERSION_STRING} is too old. 2.13.0 or later required")
+-        option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" OFF)
++        message(STATUS "Installed nasm version ${NASM_VERSION_STRING} is too old. We will use our own 2.14.02")
++	set(NASM_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/nasm/bin/nasm)
++	set(NASM_VERSION_STRING CACHE STRING "2.14.02")
++	set(ASM_NASM ${CMAKE_CURRENT_SOURCE_DIR}/nasm/bin/nasm)
++	message(STATUS "Using nasm  ${ASM_NASM} ")
++        option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" ON)
+     else()
+         message(STATUS "Found Nasm ${NASM_VERSION_STRING} to build assembly primitives")
+         option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" ON)

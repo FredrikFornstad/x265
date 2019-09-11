@@ -1,9 +1,9 @@
-%global     _so_version 146
+%global     _so_version 176
 
 Summary:    H.265/HEVC encoder
 Name:       x265
-Version:    2.6
-Release:    3%{?dist}
+Version:    3.1.2
+Release:    1%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -11,6 +11,7 @@ URL:        http://x265.org/
 License:    GPLv2+ and BSD
 
 Source0:    https://bitbucket.org/multicoreware/%{name}/downloads/%{name}_%{version}.tar.gz
+Source1:    http://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2
 
 # fix building as PIC
 Patch0:     x265-pic.patch
@@ -18,11 +19,18 @@ Patch1:     x265-high-bit-depth-soname.patch
 Patch2:     x265-detect_cpu_armhfp.patch
 Patch3:     x265-arm-cflags.patch
 Patch4:     x265-pkgconfig_path_fix.patch
+Patch5:     x265-2.8-asm-primitives.patch
+Patch6:     x265-nasm-CMakeLists.txt.patch
 
 BuildRequires:  gcc-c++
 BuildRequires:  cmake3
 %{?el7:BuildRequires: epel-rpm-macros}
-BuildRequires:  yasm
+
+%ifnarch x86_64
+# For x86_64 the built in version of nasm is too old. We will build our own nasm a bit down in this spec file
+BuildRequires:  nasm
+%endif
+
 BuildRequires:  ninja-build
 
 %ifnarch armv7hl armv7hnl s390 s390x
@@ -59,7 +67,9 @@ performance on a wide variety of hardware platforms.
 This package contains the shared library development files.
 
 %prep
-%autosetup -p1 -n %{name}_v%{version}
+%autosetup -p1 -n %{name}_%{version}
+
+tar -vxjf %{SOURCE1}
 
 %build
 # High depth libraries (from source/h265.h):
@@ -68,6 +78,18 @@ This package contains the shared library development files.
 #   library with an appropriate name:
 #     8bit:  libx265_main.so
 #     10bit: libx265_main10.so
+
+%ifarch x86_64
+# First lets build our own version of nasm for x86_64
+echo =========== Building our own version of nasm ==============
+cd nasm-2.14.02
+./autogen.sh
+./configure --prefix=%{_builddir}"/%{name}_%{version}/source/nasm" --bindir=%{_builddir}"/%{name}_%{version}/source/nasm/bin"
+make
+make install
+cd ..
+echo =========== nasm build is ready ==============
+%endif
 
 build() {
 %cmake3 -Wno-dev -G "Ninja" \
@@ -140,6 +162,11 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Thu Sep 11 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-1
+- Updated upstream to 3.1.2
+- Reintroduced the 2.8 asm patch
+- Included nasm 2.14.02 source and use it instead of the standard x86_64 nasm which is too old
+
 * Wed Jun 5 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 2.6-3
 - Removed a 2.8 asm patch that failed on armv7
 
