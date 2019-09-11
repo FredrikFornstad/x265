@@ -162,7 +162,7 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
-* Thu Sep 11 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-1
+* Wed Sep 11 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-1
 - Updated upstream to 3.1.2
 - Reintroduced the 2.8 asm patch
 - Included nasm 2.14.02 source and use it instead of the standard x86_64 nasm which is too old
