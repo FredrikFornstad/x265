@@ -162,6 +162,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Mon Sep 23 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-2
+- Rebuild with updated Koji environment
+
 * Wed Sep 11 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-1
 - Updated upstream to 3.1.2
 - Reintroduced the 2.8 asm patch
