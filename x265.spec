@@ -3,7 +3,7 @@
 Summary:    H.265/HEVC encoder
 Name:       x265
 Version:    3.1.2
-Release:    1%{?dist}
+Release:    2%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -32,6 +32,9 @@ BuildRequires:  nasm
 %endif
 
 BuildRequires:  ninja-build
+
+# The ClearOS Koji environment bombs out complaining that it do not have python3-pip or python3-setuptools. Test this workaround:
+BuildRequires: python36-pip, python36-setuptools
 
 %ifnarch armv7hl armv7hnl s390 s390x
 BuildRequires:  numactl-devel
@@ -163,7 +166,7 @@ done
 
 %changelog
 * Mon Sep 23 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-2
-- Rebuild with updated Koji environment
+- Rebuild with updated Koji environment and python workaround
 
 * Wed Sep 11 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.1.2-1
 - Updated upstream to 3.1.2
