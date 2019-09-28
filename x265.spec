@@ -3,7 +3,7 @@
 Summary:    H.265/HEVC encoder
 Name:       x265
 Version:    3.2
-Release:    1%{?dist}
+Release:    2%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -35,6 +35,10 @@ BuildRequires:  ninja-build
 
 %ifnarch armv7hl armv7hnl s390 s390x
 BuildRequires:  numactl-devel
+%endif
+
+%ifarch x86_64
+BuildRequires: autoconf
 %endif
 
 %description
@@ -162,6 +166,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sat Sep 28 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-2
+- Building nasm requires autoconf installed
+
 * Sat Sep 28 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-1
 - New upstream release
 
