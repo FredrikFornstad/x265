@@ -3,7 +3,7 @@
 Summary:    H.265/HEVC encoder
 Name:       x265
 Version:    3.2
-Release:    3%{?dist}
+Release:    4%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -162,6 +162,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sun Sep 29 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-4
+- Rebuild since Koji buildsystem did not release 3.2-3 to the right repository
+
 * Sun Sep 29 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-3
 - default nasm needed also for x86_64 to trigger if statement in CMake file
 
