@@ -3,7 +3,7 @@
 Summary:    H.265/HEVC encoder
 Name:       x265
 Version:    3.2
-Release:    2%{?dist}
+Release:    3%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -26,11 +26,7 @@ BuildRequires:  gcc-c++
 BuildRequires:  cmake3
 %{?el7:BuildRequires: epel-rpm-macros}
 
-%ifnarch x86_64
-# For x86_64 the built in version of nasm is too old. We will build our own nasm a bit down in this spec file
 BuildRequires:  nasm
-%endif
-
 BuildRequires:  ninja-build
 
 %ifnarch armv7hl armv7hnl s390 s390x
@@ -166,6 +162,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sun Sep 29 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-3
+- default nasm needed also for x86_64 to trigger if statement in CMake file
+
 * Sat Sep 28 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-2
 - Building nasm requires autoconf installed
 
