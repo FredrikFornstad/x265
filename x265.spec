@@ -1,9 +1,9 @@
-%global     _so_version 179
+%global     _so_version 188
 
 Summary:    H.265/HEVC encoder
 Name:       x265
-Version:    3.2
-Release:    4%{?dist}
+Version:    3.3
+Release:    1%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
 # source/Lib/TLibEncoder - BSD
@@ -84,7 +84,7 @@ tar -vxjf %{SOURCE1}
 echo =========== Building our own version of nasm ==============
 cd nasm-2.14.02
 ./autogen.sh
-./configure --prefix=%{_builddir}"/%{name}_%{version}/source/nasm" --bindir=%{_builddir}"/%{name}_%{version}/source/nasm/bin"
+./configure --prefix=%{_builddir}"/%{name}_%{version}/source/nasm" --bindir=%{_builddir}"/%{name}_%{version}/source/nasm/bin" CFLAGS=" -std=c11"
 make
 make install
 cd ..
@@ -162,6 +162,9 @@ done
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sun Mar 15 2020 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.3-1
+- New upstream release
+
 * Sun Sep 29 2019 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.2-4
 - Rebuild since Koji buildsystem did not release 3.2-3 to the right repository
 
