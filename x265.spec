@@ -1,8 +1,8 @@
-%global     _so_version 188
+%global     _so_version 199
 
 Summary:    H.265/HEVC encoder
 Name:       x265
-Version:    3.3
+Version:    3.5
 Release:    1%{?dist}
 URL:        http://x265.org/
 # source/Lib/TLibCommon - BSD
@@ -10,8 +10,8 @@ URL:        http://x265.org/
 # everything else - GPLv2+
 License:    GPLv2+ and BSD
 
-Source0:    https://bitbucket.org/multicoreware/%{name}/downloads/%{name}_%{version}.tar.gz
-Source1:    http://www.nasm.us/pub/nasm/releasebuilds/2.14.02/nasm-2.14.02.tar.bz2
+Source0:    https://bitbucket.org/multicoreware/%{name}_git/downloads/%{name}_%{version}.tar.gz
+Source1:    http://www.nasm.us/pub/nasm/releasebuilds/2.15.05/nasm-2.15.05.tar.bz2
 
 # fix building as PIC
 Patch0:     x265-pic.patch
@@ -19,8 +19,7 @@ Patch1:     x265-high-bit-depth-soname.patch
 Patch2:     x265-detect_cpu_armhfp.patch
 Patch3:     x265-arm-cflags.patch
 Patch4:     x265-pkgconfig_path_fix.patch
-Patch5:     x265-2.8-asm-primitives.patch
-Patch6:     x265-nasm-CMakeLists.txt.patch
+Patch5:     CMakeLists.txt.patch
 
 BuildRequires:  gcc-c++
 BuildRequires:  cmake3
@@ -82,7 +81,7 @@ tar -vxjf %{SOURCE1}
 %ifarch x86_64
 # First lets build our own version of nasm for x86_64
 echo =========== Building our own version of nasm ==============
-cd nasm-2.14.02
+cd nasm-2.15.05
 ./autogen.sh
 ./configure --prefix=%{_builddir}"/%{name}_%{version}/source/nasm" --bindir=%{_builddir}"/%{name}_%{version}/source/nasm/bin" CFLAGS=" -std=c11"
 make
@@ -96,7 +95,9 @@ build() {
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON \
     -DCMAKE_SKIP_RPATH:BOOL=YES \
     -DENABLE_PIC:BOOL=ON \
+    -DENABLE_SHARED=ON \
     -DENABLE_TESTS:BOOL=ON \
+    -DCMAKE_ASM_NASM_FLAGS=-w-macro-params-legacy \
     $* \
     ../source
 %ninja_build
@@ -116,7 +117,7 @@ popd
 
 # 8 bit base library + encoder
 mkdir 8bit; pushd 8bit
-    build
+    build -DENABLE_HDR10_PLUS=YES
 popd
 
 %install
@@ -148,6 +149,7 @@ done
 
 %files libs
 %license COPYING
+%{_libdir}/libhdr10plus.so
 %{_libdir}/libx265.so.%{_so_version}
 %ifarch x86_64 aarch64 ppc64 ppc64le
 %{_libdir}/libx265_main10.so.%{_so_version}
@@ -156,12 +158,18 @@ done
 
 %files devel
 %doc doc/*
+%{_includedir}/hdr10plus.h
 %{_includedir}/x265.h
 %{_includedir}/x265_config.h
 %{_libdir}/libx265.so
 %{_libdir}/pkgconfig/x265.pc
 
 %changelog
+* Sun Apr 25 2021 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.5-1
+- New upstream release
+- Enabled HDR10+
+- Update to latest stable nasm
+
 * Sun Mar 15 2020 Fredrik Fornstad <fredrik.fornstad@gmail.com> - 3.3-1
 - New upstream release
 

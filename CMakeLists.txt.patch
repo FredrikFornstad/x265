@@ -1,0 +1,66 @@
+--- x265_3.5/source/CMakeLists.txt	2021-03-16 13:53:00.000000000 +0100
++++ x265_3.5/source/CMakeLists.txt	2021-04-25 17:25:41.255290694 +0200
+@@ -354,8 +354,12 @@
+     option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" ON)
+ elseif(NASM_FOUND AND X86)
+     if (NASM_VERSION_STRING VERSION_LESS "2.13.0")
+-        message(STATUS "Nasm version ${NASM_VERSION_STRING} is too old. 2.13.0 or later required")
+-        option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" OFF)
++       message(STATUS "Installed nasm version ${NASM_VERSION_STRING} is too old. We will use our own 2.15.05")
++       set(NASM_EXECUTABLE ${CMAKE_CURRENT_SOURCE_DIR}/nasm/bin/nasm)
++       set(NASM_VERSION_STRING CACHE STRING "2.15.05")
++       set(ASM_NASM ${CMAKE_CURRENT_SOURCE_DIR}/nasm/bin/nasm)
++       message(STATUS "Using nasm  ${ASM_NASM} ")
++        option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" ON)
+     else()
+         message(STATUS "Found Nasm ${NASM_VERSION_STRING} to build assembly primitives")
+         option(ENABLE_ASSEMBLY "Enable use of assembly coded primitives" ON)
+@@ -485,7 +489,11 @@
+     endif()
+ endif()
+ 
+-include(Version) # determine X265_VERSION and X265_LATEST_TAG
++set(X265_VERSION "3.5")
++set(X265_LATEST_TAG "3.5")
++set(X265_TAG_DISTANCE "0")
++message(STATUS "X265 RELEASE VERSION ${X265_VERSION}")
++
+ include_directories(. common encoder "${PROJECT_BINARY_DIR}")
+ 
+ option(ENABLE_PPA "Enable PPA profiling instrumentation" OFF)
+@@ -669,7 +677,7 @@
+         endif()
+     endif()
+     set_target_properties(x265-shared PROPERTIES SOVERSION ${X265_BUILD})
+-    if(X265_LATEST_TAG)
++
+         if(WINDOWS)
+             set_target_properties(x265-shared PROPERTIES VERSION ${X265_LATEST_TAG})
+         endif()
+@@ -678,7 +686,7 @@
+                 LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+                 ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
+                 RUNTIME DESTINATION ${BIN_INSTALL_DIR})
+-    endif()
++
+     if(ENABLE_HDR10_PLUS)
+         install(TARGETS hdr10plus-shared
+             LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+@@ -691,7 +699,7 @@
+     endif()
+ endif()
+ 
+-if(X265_LATEST_TAG)
++
+     # convert lists of link libraries into -lstdc++ -lm etc..
+     foreach(LIB ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES} ${PLATFORM_LIBS})
+         if(IS_ABSOLUTE ${LIB} AND EXISTS ${LIB})
+@@ -714,7 +722,7 @@
+     configure_file("x265.pc.in" "x265.pc" @ONLY)
+     install(FILES       "${CMAKE_CURRENT_BINARY_DIR}/x265.pc"
+             DESTINATION "${LIB_INSTALL_DIR}/pkgconfig")
+-endif()
++
+ 
+ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
